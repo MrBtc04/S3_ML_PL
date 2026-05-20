@@ -1,0 +1,30 @@
+# Python temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.venv/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# OS metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Heavy datasets and raw data
+data/raw/
+data/processed/*.csv
+
+# Keras/TensorFlow/XGBoost temporary saves (optional to keep the local workspace clean in git)
+.ipynb_checkpoints
+.pytest_cache/
+.vscode/
+.idea/

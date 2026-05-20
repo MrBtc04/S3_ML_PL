@@ -1,0 +1,19 @@
+============================================================
+XGBOOST FAULT CLASSIFIER REPORT
+============================================================
+
+Test Accuracy: 0.997368
+
+Classification Report per Class:
+                      precision    recall  f1-score   support
+
+          Normal (0)       1.00      1.00      1.00        95
+      Ball Fault (1)       1.00      1.00      1.00        95
+Inner Race Fault (2)       1.00      0.99      0.99        95
+Outer Race Fault (3)       0.99      1.00      0.99        95
+
+            accuracy                           1.00       380
+           macro avg       1.00      1.00      1.00       380
+        weighted avg       1.00      1.00      1.00       380
+
+============================================================
