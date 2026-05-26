@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S3 Catenaria Health Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --panel-bg: rgba(22, 24, 37, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #f5f6f9;
+            --text-muted: #8e94a5;
+            --accent-cyan: #00e5ff;
+            --accent-purple: #8a2be2;
+            --severity-color: #28a745;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0b0c10 0%, #151728 100%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 1100px;
+            width: 100%;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            margin: 0;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .severity-badge {
+            background-color: var(--severity-color);
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            padding: 8px 18px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px var(--severity-color);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .grid-full {
+            grid-template-columns: 1fr;
+        }
+        
+        .card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--accent-cyan);
+            border-left: 4px solid var(--accent-purple);
+            padding-left: 10px;
+        }
+        
+        .metrics-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+        
+        .metric-value.cyan { color: var(--accent-cyan); }
+        .metric-value.purple { color: var(--accent-purple); }
+        .metric-value.severity { color: var(--severity-color); }
+        
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .summary-text {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: #d1d5db;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        
+        td {
+            color: #e5e7eb;
+            font-size: 0.95rem;
+        }
+        
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+        
+        .shift-up {
+            color: #ff5252;
+            font-weight: bold;
+        }
+        .shift-neutral {
+            color: var(--accent-cyan);
+        }
+        
+        ol, ul {
+            padding-left: 20px;
+            margin: 0;
+        }
+        
+        li {
+            margin-bottom: 12px;
+            line-height: 1.5;
+            color: #e5e7eb;
+        }
+        
+        li::marker {
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .metrics-cards-grid {
+                grid-template-columns: 1fr;
+            }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>S3 Catenaria Health Dashboard</h1>
+                <p style="color: var(--text-muted); margin: 5px 0 0 0;">Railway Overhead Line Diagnostic & Anomaly Engine</p>
+            </div>
+            <div class="severity-badge">NORMAL</div>
+        </header>
+        
+        <div class="grid">
+            <div class="card">
+                <h3 class="card-title">Executive Summary</h3>
+                <div class="metrics-cards-grid">
+                    <div class="metric-card">
+                        <div class="metric-value cyan">34038</div>
+                        <div class="metric-label">Timestamps Scanned</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value severity">Normal</div>
+                        <div class="metric-label">System State</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value purple">0.2%</div>
+                        <div class="metric-label">Anomaly Rate</div>
+                    </div>
+                </div>
+                <div class="summary-text">
+                    <strong>AI Railway Diagnostic Summary:</strong><br>
+                    Automated diagnostic review confirms stable mechanical behavior of the catenary system. Minor anomalous micro-oscillations are detected in higher wind speeds, but wire height and mechanical tension remain within normal tolerances. Continue routine scheduled sweeps.
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">XGBoost Class Distribution</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Class Classification</th>
+                            <th>Timestamps</th>
+                            <th>Visual Indicator</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Normal Baseline</td>
+                            <td>32712</td>
+                            <td><div style="background-color: #28a745; height: 10px; width: 96px; border-radius: 5px;"></div></td>
+                        </tr>
+                        <tr>
+                            <td>Anomaly Flagged</td>
+                            <td>1326</td>
+                            <td><div style="background-color: #dc3545; height: 10px; width: 3px; border-radius: 5px;"></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="grid grid-full">
+            <div class="card">
+                <h3 class="card-title">Catenary Physical Sensor Shifts</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Catenary Sensor Telemetry</th>
+                            <th>Normal Mode Average</th>
+                            <th>Anomaly Mode Average</th>
+                            <th>Relative Deviation</th>
+                            <th>Railway Diagnostic Meaning</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Altezza</strong> (Wire Height)</td>
+                            <td>0.0</td>
+                            <td>-1.87</td>
+                            <td><span class="shift-up">-50802.99%</span></td>
+                            <td>Contact plane elevation profile. Height drift triggers mechanical wear.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Taglia</strong> (Tension Weight)</td>
+                            <td>0.0</td>
+                            <td>-2.06</td>
+                            <td><span class="shift-up">-50802.99%</span></td>
+                            <td>Line mechanical tension weight shift. High variance triggers sag.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Temperatura</strong> (Wire/Env Temp)</td>
+                            <td>-0.0</td>
+                            <td>1.69</td>
+                            <td><span class="shift-up">50802.99%</span></td>
+                            <td>Thermal expansions. Extreme temp increases vertical wire sag.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Umidita</strong> (Insulator moisture)</td>
+                            <td>0.0</td>
+                            <td>-0.46</td>
+                            <td><span class="shift-up">-50802.99%</span></td>
+                            <td>Insulation performance. High humidity leads to micro-arcs.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Vento</strong> (Wind speed)</td>
+                            <td>-0.0</td>
+                            <td>1.12</td>
+                            <td><span class="shift-up">+50802.99%</span></td>
+                            <td>Wind-induced swayed oscillations. Extreme wind triggers pantograph slip.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="grid grid-full">
+            <div class="card">
+                <h3 class="card-title">Prescriptive Operations Recommendations</h3>
+                <ol style="margin-top: 15px;">
+                    <li>Continue routine visual checks on contact wire height and mechanical weight tension systems.</li><li>Ensure regular inspection of counterweight pulleys and cable alignments.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

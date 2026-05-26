@@ -14,27 +14,27 @@ from evaluate import compare_models
 
 def run_pipeline():
     """
-    Orchestrates the entire CWRU Bearing Fault Diagnostic & Anomaly Detection Pipeline.
+    Orchestrates the entire S3 ML Catenaria Diagnostic & Anomaly Detection Pipeline.
     """
     start_time = time.time()
     
     print("\n" + "="*80)
-    print("S3 ML PIPELINE — STARTING EXECUTION")
+    print("S3 ML PIPELINE — STARTING EXECUTION (CATENARIA DICTIONARY)")
     print("="*80)
     
-    # Create required folder structure just in case
+    # Create required folder structure
     for path in ["data/raw", "data/processed", "models/isolation_forest", 
                  "models/lstm_autoencoder", "models/xgboost", "output/reports", "output/plots"]:
         os.makedirs(path, exist_ok=True)
         
     try:
-        # Step 1 & 2: Load CWRU data and segment into windows
-        print("\n--- STEP 1 & 2: LOADING & WINDOW SEGMENTATION ---")
+        # Step 1 & 2: Load Catenaria data and align timeseries
+        print("\n--- STEP 1 & 2: LOADING & CHRONOLOGICAL TIMESERIES ALIGNMENT ---")
         load_cwru_data(raw_dir="data/raw", processed_dir="data/processed")
-        create_windows(raw_dir="data/raw", processed_dir="data/processed", window_size=1024, step_size=512)
+        create_windows(raw_dir="data/raw", processed_dir="data/processed")
         
         # Step 3 & 4: Feature extraction and scaling
-        print("\n--- STEP 3 & 4: FEATURE ENGINEERING & SCALING ---")
+        print("\n--- STEP 3 & 4: SENSOR FEATURE CLEANING & STANDARD SCALING ---")
         extract_features(windows_path="data/processed/windows.csv", features_path="data/processed/features.csv")
         scale_features(features_path="data/processed/features.csv", 
                        scaled_path="data/processed/features_scaled.csv", 
@@ -53,14 +53,14 @@ def run_pipeline():
                                plot_dir="output/plots")
                                
         # Step 9 & 10: XGBoost Fault Classifier
-        print("\n--- STEP 9 & 10: XGBOOST CLASSIFIER TRAINING & EVALUATION ---")
+        print("\n--- STEP 9 & 10: XGBOOST ANOMALY CLASSIFIER TRAINING ---")
         train_xgboost(scaled_path="data/processed/features_scaled.csv",
                       model_path="models/xgboost/xgb_model.json",
                       report_path="output/reports/xgboost_report.txt",
                       plot_dir="output/plots")
                       
         # Step 11: Combined comparative evaluation
-        print("\n--- STEP 11: COMBINED EVALUATION & COMPARISON ---")
+        print("\n--- STEP 11: COMBINED EVALUATION & AGREEMENT COMPARISON ---")
         compare_models(scaled_path="data/processed/features_scaled.csv",
                        results_path="output/reports/combined_results.csv",
                        plot_path="output/plots/model_comparison.png")
@@ -69,7 +69,7 @@ def run_pipeline():
         elapsed = end_time - start_time
         
         print("\n" + "="*80)
-        print("PIPELINE COMPLETED SUCCESSFULLY!")
+        print("S3 ML CATENARIA PIPELINE COMPLETED SUCCESSFULLY!")
         print(f"Total Execution Time: {elapsed/60:.2f} minutes ({elapsed:.2f} seconds)")
         print("="*80 + "\n")
         

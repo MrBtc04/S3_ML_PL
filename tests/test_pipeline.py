@@ -4,7 +4,6 @@ import unittest
 import numpy as np
 import pandas as pd
 import joblib
-from scipy.stats import kurtosis, skew
 
 # Append src/ to path so we can import the modules
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
@@ -25,16 +24,12 @@ class TestMLPipeline(unittest.TestCase):
         self.mock_scaled_path = os.path.join(self.tmp_dir, "mock_features_scaled.csv")
         self.mock_scaler_path = os.path.join(self.tmp_dir, "mock_scaler.pkl")
         
-        # Create a mock window of 1024 samples (sine wave + noise)
-        np.random.seed(42)
-        t = np.linspace(0, 1, 1024, endpoint=False)
-        # 10 Hz sine wave + noise
-        signal = np.sin(2 * np.pi * 10 * t) + 0.1 * np.random.randn(1024)
-        
-        # Build a 2-row DataFrame representing 2 windows
-        cols = [f"w_{i}" for i in range(1024)]
-        self.mock_df = pd.DataFrame([signal, -signal], columns=cols)
-        self.mock_df["label"] = [0, 1]  # Row 0: Normal, Row 1: Fault
+        # Build a 2-row DataFrame representing 2 Catenaria readings
+        # Features: Altezza, Taglia, Temperatura, Umidita, Vento
+        self.mock_df = pd.DataFrame([
+            ["20/05/2026 T15:00:00", 1.2, 0.5, 22.4, 55.2, 12.5, 0],
+            ["20/05/2026 T15:01:00", 1.3, 0.6, 23.1, 54.8, 14.1, 1]
+        ], columns=["Data", "Altezza", "Taglia", "Temperatura", "Umidita", "Vento", "label"])
         
         self.mock_df.to_csv(self.mock_windows_path, index=False)
 
@@ -59,21 +54,19 @@ class TestMLPipeline(unittest.TestCase):
         self.assertTrue(os.path.exists(self.mock_features_path))
         features_df = pd.read_csv(self.mock_features_path)
         
-        # Verify shape (2 windows, 12 features + 1 label column = 13 columns)
-        self.assertEqual(features_df.shape, (2, 13))
+        # Verify shape (2 rows, 5 features + 1 label column = 6 columns)
+        self.assertEqual(features_df.shape, (2, 6))
         
         # Get extracted features for normal window
         row = features_df.iloc[0]
-        window_raw = self.mock_df.drop(columns=["label"]).iloc[0].values
         
-        # Verify core time-domain calculations
-        self.assertAlmostEqual(row["mean"], np.mean(window_raw), places=5)
-        self.assertAlmostEqual(row["std"], np.std(window_raw), places=5)
-        self.assertAlmostEqual(row["rms"], np.sqrt(np.mean(window_raw**2)), places=5)
-        self.assertAlmostEqual(row["peak"], np.max(np.abs(window_raw)), places=5)
-        self.assertAlmostEqual(row["p2p"], np.max(window_raw) - np.min(window_raw), places=5)
-        self.assertAlmostEqual(row["kurtosis"], kurtosis(window_raw), places=5)
-        self.assertAlmostEqual(row["skewness"], skew(window_raw), places=5)
+        # Verify core Catenaria features match (and Data was dropped)
+        self.assertNotIn("Data", features_df.columns)
+        self.assertAlmostEqual(row["Altezza"], 1.2, places=5)
+        self.assertAlmostEqual(row["Taglia"], 0.5, places=5)
+        self.assertAlmostEqual(row["Temperatura"], 22.4, places=5)
+        self.assertAlmostEqual(row["Umidita"], 55.2, places=5)
+        self.assertAlmostEqual(row["Vento"], 12.5, places=5)
 
     def test_scaler_persistence(self):
         """
@@ -92,7 +85,7 @@ class TestMLPipeline(unittest.TestCase):
         # Load scaler and verify it's a valid object
         scaler = joblib.load(self.mock_scaler_path)
         self.assertTrue(hasattr(scaler, "mean_"))
-        self.assertEqual(len(scaler.mean_), 12)  # Should have 12 feature means
+        self.assertEqual(len(scaler.mean_), 5)  # Should have 5 feature means
 
     def test_serialized_models(self):
         """
@@ -102,14 +95,14 @@ class TestMLPipeline(unittest.TestCase):
         scaler_file = "models/scaler.pkl"
         if os.path.exists(scaler_file):
             scaler = joblib.load(scaler_file)
-            self.assertEqual(scaler.n_features_in_, 12)
+            self.assertEqual(scaler.n_features_in_, 5)
             
         # 2. Isolation Forest Model Check
         if_model_file = "models/isolation_forest/if_model.pkl"
         if os.path.exists(if_model_file):
             if_model = joblib.load(if_model_file)
-            # Feed dummy sample (1 row, 12 features)
-            dummy_sample = np.zeros((1, 12))
+            # Feed dummy sample (1 row, 5 features)
+            dummy_sample = np.zeros((1, 5))
             prediction = if_model.predict(dummy_sample)
             self.assertIn(prediction[0], [1, -1])  # 1 = Normal, -1 = Anomaly
             
@@ -119,10 +112,10 @@ class TestMLPipeline(unittest.TestCase):
             from xgboost import XGBClassifier
             xgb = XGBClassifier()
             xgb.load_model(xgb_model_file)
-            # XGBoost expects 14 features (12 base scaled features + if_score + lstm_error)
-            dummy_sample = np.zeros((1, 14))
+            # XGBoost expects 7 features (5 base scaled features + if_score + lstm_error)
+            dummy_sample = np.zeros((1, 7))
             pred_class = xgb.predict(dummy_sample)
-            self.assertIn(pred_class[0], [0, 1, 2, 3])
+            self.assertIn(pred_class[0], [0, 1])  # 0 = Normal, 1 = Anomaly
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,57 @@
+{
+    "metrics": {
+        "total_windows": 34038,
+        "isolation_forest": {
+            "anomalies_detected": 1708,
+            "anomaly_rate_pct": 5.02
+        },
+        "lstm_autoencoder": {
+            "anomalies_detected": 590,
+            "anomaly_rate_pct": 1.73
+        },
+        "high_confidence_anomalies": {
+            "count": 67,
+            "rate_pct": 0.2
+        },
+        "xgboost_distribution": {
+            "Normal": 32712,
+            "Anomaly": 1326
+        },
+        "system_health_state": "Normal",
+        "severity_level": "NORMAL"
+    },
+    "insights": {
+        "telemetry": {
+            "altezza_shift": {
+                "normal": 0.0,
+                "anomaly": -1.87,
+                "change_pct": -50802.99
+            },
+            "taglia_shift": {
+                "normal": 0.0,
+                "anomaly": -2.06,
+                "change_pct": -50802.99
+            },
+            "temperatura_shift": {
+                "normal": -0.0,
+                "anomaly": 1.69,
+                "change_pct": 50802.99
+            },
+            "umidita_shift": {
+                "normal": 0.0,
+                "anomaly": -0.46,
+                "change_pct": -50802.99
+            },
+            "vento_shift": {
+                "normal": -0.0,
+                "anomaly": 1.12,
+                "change_pct": 50802.99
+            }
+        },
+        "ai_summary": "Automated diagnostic review confirms stable mechanical behavior of the catenary system. Minor anomalous micro-oscillations are detected in higher wind speeds, but wire height and mechanical tension remain within normal tolerances. Continue routine scheduled sweeps."
+    },
+    "recommendations": [
+        "Continue routine visual checks on contact wire height and mechanical weight tension systems.",
+        "Ensure regular inspection of counterweight pulleys and cable alignments."
+    ]
+}
